@@ -34,8 +34,9 @@ extern "C" void DebugLog(const char* s) {
     DEBUG_SERIAL_OBJECT.begin(9600);
     // Wait for serial port to connect. Only needed for some models apparently?
     while (!DEBUG_SERIAL_OBJECT) {
+      delay(1);  // Some devices require a check in with the RTOS in busywaits
     }
     is_initialized = true;
   }
-  DEBUG_SERIAL_OBJECT.println(s);
+  DEBUG_SERIAL_OBJECT.print(s);
 }
