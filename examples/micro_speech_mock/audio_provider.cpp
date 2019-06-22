@@ -20,6 +20,8 @@ limitations under the License.
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/no_1000ms_sample_data.h"
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/yes_1000ms_sample_data.h"
 
+#include <Arduino.h>
+
 namespace {
 int16_t g_dummy_audio_data[kMaxAudioSampleSize];
 int32_t g_latest_audio_timestamp = 0;
