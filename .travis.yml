@@ -31,7 +31,7 @@ install:
    - arduino --install-library "Adafruit PixelDust"
    - arduino --install-library "SdFat"
    - arduino --install-library "ArduinoJson"
-   - arduino --install-library "Adafruit Arcada"
+   - arduino --install-library "Adafruit Arcada Library"
 
 script:
    - build_arcada_platforms
