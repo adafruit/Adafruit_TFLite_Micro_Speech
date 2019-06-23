@@ -17,12 +17,38 @@ limitations under the License.
 
 // Include an empty header so that Arduino knows to build the TF Lite library.
 #include <TensorFlowLite.h>
+#include "tensorflow/lite/experimental/micro/examples/micro_speech/command_responder.h"
+
 
 extern int tflite_micro_main(int argc, char* argv[]);
 
 void setup() {
+  analogWriteResolution(10);
+  analogWrite(A0, 1023);
+  delay(10);
+  analogWrite(A1, 1023);
+  delay(10);
+  pinMode(13, OUTPUT);
+  
+  while (!Serial);
+  Serial.begin(115200);
+  delay(100);
+  Serial.println("-----------TFLITE----------");
+
+  
   tflite_micro_main(0, NULL);
 }
 
 void loop() {
+
+}
+
+
+void RespondToCommand(tflite::ErrorReporter* error_reporter,
+                      int32_t current_time, const char* found_command,
+                      uint8_t score, bool is_new_command) {
+  if (is_new_command) {
+    error_reporter->Report("I heard %s (score %d) @%dms (realtime %d)", found_command, score,
+                           current_time, millis());
+  }
 }
