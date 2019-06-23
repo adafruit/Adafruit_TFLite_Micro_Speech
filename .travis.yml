@@ -1,0 +1,41 @@
+language: c
+sudo: false
+
+cache:
+  directories:
+    - ~/arduino_ide
+    - ~/.arduino15/packages/
+
+git:
+  depth: false
+  quiet: true
+
+env:
+  global:
+    - PRETTYNAME="Adafruit TensorFlow Lite Micro Speech"
+
+before_install:
+  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+
+install:
+   - arduino --install-library "Adafruit Unified Sensor"
+   - arduino --install-library "Adafruit NeoPixel"
+   - arduino --install-library "Adafruit QSPI"
+   - arduino --install-library "Adafruit GFX Library"
+   - arduino --install-library "Adafruit ST7735 and ST7789 Library"
+   - arduino --install-library "Adafruit ILI9341"
+   - arduino --install-library "Adafruit SPIFlash"
+   - arduino --install-library "Adafruit LIS3DH"
+   - arduino --install-library "Adafruit ZeroTimer Library"
+   - arduino --install-library "Adafruit TouchScreen"
+   - arduino --install-library "Adafruit PixelDust"
+   - arduino --install-library "SdFat"
+   - arduino --install-library "ArduinoJson"
+   - arduino --install-library "Adafruit Arcada"
+
+script:
+   - build_arcada_platforms
+
+after_success:
+  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/library_check.sh)
+  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/doxy_gen_and_deploy.sh)
