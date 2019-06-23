@@ -24,6 +24,7 @@ limitations under the License.
 #include "tensorflow/lite/experimental/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
+#include <Arduino.h>
 
 int tflite_micro_main(int argc, char* argv[]) {
   // Set up logging.
@@ -77,6 +78,8 @@ int tflite_micro_main(int argc, char* argv[]) {
   int32_t previous_time = 0;
   // Keep reading and analysing audio data in an infinite loop.
   while (true) {
+    yield(); // let USB or RTOS do things
+
     // Fetch the spectrogram for the current time.
     const int32_t current_time = LatestAudioTimestamp();
     int how_many_new_slices = 0;
