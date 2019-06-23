@@ -32,6 +32,7 @@ install:
    - arduino --install-library "SdFat"
    - arduino --install-library "ArduinoJson"
    - arduino --install-library "Adafruit Arcada Library"
+   - arduino --install-library "Adafruit Arcada GifDecoder"
 
 script:
    - build_arcada_platforms
