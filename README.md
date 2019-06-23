@@ -1,4 +1,4 @@
-# Adafruit Arcada Library [![Build Status](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech.svg?branch=master)](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech)
+# Adafruit TensorFlow Lite Micro Speech Library [![Build Status](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech.svg?branch=master)](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech)
 
 This is a 'Arduino-ified' version of the TensorFlow Lite (experimental) micro speech example. Some changes were made to the generated Arduino project file, and then we built some examples on top of it. We require pressing a button to record audio that is then analyzed - there is no example for continuous record/analyze (yet)
 
