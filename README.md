@@ -6,6 +6,12 @@ The Arcada/Tron demo woks best with PyGamer or PyBadge but any other Arcada boar
 
 SAMD51 works best, we recommend running at 200MHz and -Ofast for perky performance. 
 
+[Check our blog post for more info](https://blog.adafruit.com/2019/06/24/tiny-machine-learning-on-the-edge-with-tensorflow-lite-running-on-samd51-arduino-tensorflow-tinyml-tensorflow/)
+
+Here's a video of it in action :)
+
+ [![Tiny Machine Learning on the Edge with TensorFlow Lite Running on SAMD51](http://img.youtube.com/vi/cn9PEDX_qLk/0.jpg)](http://www.youtube.com/watch?v=cn9PEDX_qLk "Tiny Machine Learning on the Edge with TensorFlow Lite Running on SAMD51")
+
 -------
 
 Copyright 2019 The TensorFlow Authors. All Rights Reserved.
