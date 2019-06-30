@@ -49,7 +49,7 @@ int tflite_micro_main(int argc, char* argv[]) {
   // Create an area of memory to use for input, output, and intermediate arrays.
   // The size of this will depend on the model you're using, and may need to be
   // determined by experimentation.
-  const int tensor_arena_size = 64 * 1024;
+  const int tensor_arena_size = 30 * 1024;
   uint8_t tensor_arena[tensor_arena_size];
   tflite::SimpleTensorAllocator tensor_allocator(tensor_arena,
                                                  tensor_arena_size);
