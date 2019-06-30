@@ -33,7 +33,7 @@ constexpr int kFeatureElementCount = (kFeatureSliceSize * kFeatureSliceCount);
 constexpr int kFeatureSliceStrideMs = 20;
 constexpr int kFeatureSliceDurationMs = 30;
 
-constexpr int kCategoryCount = 4;
+constexpr int kCategoryCount = 6;
 constexpr int kSilenceIndex = 0;
 constexpr int kUnknownIndex = 1;
 extern const char* kCategoryLabels[kCategoryCount];
