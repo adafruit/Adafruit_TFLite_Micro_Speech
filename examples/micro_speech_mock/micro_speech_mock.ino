@@ -19,22 +19,39 @@ limitations under the License.
 #include <TensorFlowLite.h>
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/command_responder.h"
 
-
 extern int tflite_micro_main(int argc, char* argv[]);
+extern unsigned char model_data[];
+extern const char *model_labels[];
+
+unsigned char *g_tiny_conv_micro_features_model_data;
+extern unsigned char kCategoryCount;
+extern const char *model_labels[];
+char **kCategoryLabels;
 
 void setup() {
-  analogWriteResolution(10);
-  analogWrite(A0, 1023);
-  delay(10);
-  analogWrite(A1, 1023);
-  delay(10);
   pinMode(13, OUTPUT);
   
-  while (!Serial);
   Serial.begin(115200);
+  while (!Serial) { delay(10); }
   delay(100);
-  Serial.println("-----------TFLITE----------");
 
+  // Set up the model dynamically!
+  g_tiny_conv_micro_features_model_data = (unsigned char *)model_data;
+  Serial.printf("Model Data: ", g_tiny_conv_micro_features_model_data, model_data);
+  for (uint8_t x=0; x<16; x++) {
+    Serial.printf("0x%02X, ", g_tiny_conv_micro_features_model_data[x]);
+  }
+  Serial.println("...");
+
+  kCategoryLabels = (char **)malloc(kCategoryCount * sizeof(char **)); 
+  Serial.printf("Found %d labels:\n", kCategoryCount);
+  for (int i=0; i<kCategoryCount; i++) {
+    kCategoryLabels[i] = (char *)malloc(strlen(model_labels[i])+1);
+    strcpy(kCategoryLabels[i], model_labels[i]);
+    Serial.print("\t"); Serial.println(kCategoryLabels[i]);
+  }
+  
+  Serial.println("-----------TFLITE----------");
   
   tflite_micro_main(0, NULL);
 }

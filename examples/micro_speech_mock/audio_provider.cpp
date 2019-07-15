@@ -31,7 +31,7 @@ int32_t g_latest_audio_timestamp = 0;
 TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
                              int start_ms, int duration_ms,
                              int* audio_samples_size, int16_t** audio_samples) {
-  //digitalWrite(13, HIGH);
+  digitalWrite(13, HIGH);
   const int yes_start = (0 * kAudioSampleFrequency) / 1000;
   const int yes_end = (1000 * kAudioSampleFrequency) / 1000;
 
@@ -59,7 +59,7 @@ TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
   }
   *audio_samples_size = kMaxAudioSampleSize;
   *audio_samples = g_dummy_audio_data;
-  //digitalWrite(13, LOW);
+  digitalWrite(13, LOW);
   return kTfLiteOk;
 }
 
