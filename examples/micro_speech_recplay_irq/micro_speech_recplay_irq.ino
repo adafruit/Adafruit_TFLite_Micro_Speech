@@ -28,7 +28,7 @@ limitations under the License.
 #define LED_OUT       13
 #define BUTTON        5
 #define NEOPIXEL_PIN  8
-#define AUDIO_IN      A5
+#define AUDIO_IN      A8
 
 #define DAC_TIMER        5
 void TC5_Handler(){
@@ -93,6 +93,12 @@ void TimerCallback() {
 }
 
 extern int tflite_micro_main(int argc, char* argv[]);
+extern unsigned char model_data[];
+extern const char *model_labels[];
+unsigned char *g_tiny_conv_micro_features_model_data;
+extern unsigned char kCategoryCount;
+extern const char *model_labels[];
+char **kCategoryLabels;
 
 void setup() {
   pinMode(LED_OUT, OUTPUT);   // Onboard LED can be used for precise
@@ -115,6 +121,22 @@ void setup() {
   }
   memset(recording_buffer, 0, BUFFER_SIZE * sizeof(int16_t));
   recording_length = 0;
+
+  // Set up the model dynamically!
+  g_tiny_conv_micro_features_model_data = (unsigned char *)model_data;
+  Serial.printf("Model Data: ", g_tiny_conv_micro_features_model_data, model_data);
+  for (uint8_t x=0; x<16; x++) {
+    Serial.printf("0x%02X, ", g_tiny_conv_micro_features_model_data[x]);
+  }
+  Serial.println("...");
+
+  kCategoryLabels = (char **)malloc(kCategoryCount * sizeof(char **)); 
+  Serial.printf("Found %d labels:\n", kCategoryCount);
+  for (int i=0; i<kCategoryCount; i++) {
+    kCategoryLabels[i] = (char *)malloc(strlen(model_labels[i])+1);
+    strcpy(kCategoryLabels[i], model_labels[i]);
+    Serial.print("\t"); Serial.println(kCategoryLabels[i]);
+  }
 
   initTimer();
   analogWriteResolution(12);
