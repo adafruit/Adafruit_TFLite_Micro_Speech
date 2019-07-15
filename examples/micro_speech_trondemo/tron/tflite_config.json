@@ -1,0 +1,5 @@
+{
+"model_name" : "Yes / No",
+"file_name" : "/tron/yesno.tflite",
+"category_labels" : ["silence", "unknown", "yes", "no"]
+}

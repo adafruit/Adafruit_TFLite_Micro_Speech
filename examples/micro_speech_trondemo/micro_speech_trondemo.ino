@@ -30,6 +30,9 @@ limitations under the License.
 #include "yes-16k-mono-8bit.h"
 #include "no-16k-mono-8bit.h"
 
+bool loadTFConfigFile(const char *filename="/tron/tflite_config.json");
+StaticJsonDocument<256> TFconfigJSON;  ///< The object to store our various settings
+
 #define LED_OUT       13
 #define AUDIO_IN      A8  // Stemma D2
 #define AUDIO_OUT     A0
@@ -46,6 +49,11 @@ int16_t *recording_buffer;
 volatile uint32_t audio_timestamp_ms;
 const uint8_t *play_buffer;
 volatile uint32_t play_length;
+
+uint8_t kCategoryCount = 0;
+char **kCategoryLabels;
+unsigned char *g_tiny_conv_micro_features_model_data;
+int g_tiny_conv_micro_features_model_data_len;
 
 volatile bool val;
 volatile bool isRecording, isPlaying;
@@ -111,7 +119,7 @@ void setup() {
   arcada.filesysBeginMSD();
 
   Serial.begin(115200);
-  //while(!Serial) delay(10);                // Wait for Serial monitor before continuing
+  while(!Serial) delay(10);                // Wait for Serial monitor before continuing
 
   arcada.displayBegin();
   Serial.println("Arcada display begin");
@@ -135,6 +143,56 @@ void setup() {
     arcada.haltBox("No filesystem found! For QSPI flash, load CircuitPython. For SD cards, format with FAT");
   }
 
+
+  if (!loadTFConfigFile()) {
+    arcada.haltBox("Failed to load TFLite config");
+  }
+  const char *modelname = TFconfigJSON["model_name"];
+  Serial.print("Model name: "); Serial.println(modelname);
+  
+  const char *tfilename = TFconfigJSON["file_name"];
+  Serial.print("File name: "); Serial.println(tfilename);
+
+  File tflite_file = arcada.open(tfilename);
+  if (! tflite_file) {
+    arcada.haltBox("TFLite model file not found");
+  }
+  g_tiny_conv_micro_features_model_data_len = tflite_file.fileSize();
+  Serial.printf("Found tflite model of size %d\n", g_tiny_conv_micro_features_model_data_len);
+  g_tiny_conv_micro_features_model_data = (unsigned char *)malloc(g_tiny_conv_micro_features_model_data_len+15);
+  if (! g_tiny_conv_micro_features_model_data) {
+    arcada.haltBox("Could not malloc model space");
+  } else {
+    Serial.printf("Model address = %08x\n", &g_tiny_conv_micro_features_model_data);
+  }
+  
+  ssize_t ret = tflite_file.read(g_tiny_conv_micro_features_model_data, g_tiny_conv_micro_features_model_data_len);
+  if (ret != g_tiny_conv_micro_features_model_data_len) {
+    arcada.haltBox("Could not load model");
+  }
+  Serial.println("\nSuccess!");
+
+  JsonArray labelArray = TFconfigJSON["category_labels"].as<JsonArray>();
+  Serial.print("Category label count: "); Serial.println(labelArray.size());
+  kCategoryCount = labelArray.size();
+  kCategoryLabels = (char **)malloc(kCategoryCount * sizeof(char *));
+  if (! kCategoryLabels) {
+    arcada.haltBox("Failed to allocate category labels array");
+  }
+  for (int s=0; s<kCategoryCount; s++) {
+    const char *label = TFconfigJSON["category_labels"][s];
+    kCategoryLabels[s] = (char *)malloc((strlen(label)+1) * sizeof(char));
+    if (! kCategoryLabels) {
+      arcada.haltBox("Failed to allocate category label");
+    }
+    memcpy(kCategoryLabels[s], label, strlen(label)+1);
+    Serial.printf("Label #%d: ", s); Serial.println(kCategoryLabels[s]);
+  }
+
+  for (uint8_t x=0; x<32; x++) {
+    Serial.printf("0x%02X, ", g_tiny_conv_micro_features_model_data[x]);
+  }
+
   // get the gif decoder lined up
   initGIFDecode();
   // start our 16khz timer
@@ -156,6 +214,30 @@ void setup() {
 void loop() {
 
 }
+
+
+bool loadTFConfigFile(const char *filename) {
+  // Open file for reading
+  File file = arcada.open(filename);
+  if (!file) {
+    Serial.print("Failed to open file");
+    Serial.println(filename);
+    return false;
+  }
+
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(TFconfigJSON, file);
+  if (error) {
+    Serial.println(F("Failed to read file"));
+    return false;
+  }
+
+  // Close the file (File's destructor doesn't close the file)
+  file.close();
+
+  return true;
+}
+
 
 // Our little helper to play a GIF and matching audio file at the same time
 void playSoundAndGIF(const char *gifname, const uint8_t *audio, uint32_t audiolen) {
