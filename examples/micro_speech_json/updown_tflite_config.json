@@ -1,0 +1,5 @@
+{
+"model_name" : "Up / Down",
+"file_name" : "updown.tflite",
+"category_labels" : ["silence", "unknown", "up", "down"]
+}

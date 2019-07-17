@@ -25,7 +25,7 @@ limitations under the License.
 #include <Adafruit_Arcada.h>
 
 bool loadTFConfigFile(const char *filename="/tflite_config.json");
-StaticJsonDocument<256> TFconfigJSON;  ///< The object to store our various settings
+StaticJsonDocument<512> TFconfigJSON;  ///< The object to store our various settings
 
 #define LED_OUT       13
 #define AUDIO_IN      A8  // aka D2
@@ -99,9 +99,8 @@ void setup() {
   arcada.begin();
   arcada.filesysBeginMSD();
 
-
   Serial.begin(115200);
-  while(!Serial) delay(10);  // Wait for Serial monitor before continuing
+  //while(!Serial) delay(10);  // Wait for Serial monitor before continuing
 
   arcada.displayBegin();
   Serial.println("Arcada display begin");
@@ -120,15 +119,22 @@ void setup() {
   analogWriteResolution(12);
   analogReadResolution(12);
 
-
   if (!loadTFConfigFile()) {
     arcada.haltBox("Failed to load TFLite config");
   }
   const char *modelname = TFconfigJSON["model_name"];
   Serial.print("Model name: "); Serial.println(modelname);
+
+  arcada.fillScreen(ARCADA_BLACK);
+  arcada.setCursor(0, 0);
+  arcada.setTextSize(1);
+  arcada.setTextColor(ARCADA_WHITE);
+  arcada.print("TFLite Model: ");
+  arcada.println(modelname);
   
   const char *tfilename = TFconfigJSON["file_name"];
   Serial.print("File name: "); Serial.println(tfilename);
+  arcada.print("File name: "); arcada.println(tfilename);
 
   File tflite_file = arcada.open(tfilename);
   if (! tflite_file) {
@@ -172,7 +178,8 @@ void setup() {
 
   Serial.println("\nWaiting for button press A to record...");
   Serial.println("-----------ARCADA TFLITE----------");
-
+  arcada.print("\nPress A to record & infer!");
+  
   delay(100);
   
   tflite_micro_main(0, NULL);
@@ -217,8 +224,15 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
     arcada.setCursor(arcada.width()/4, arcada.height()/2);
     arcada.setTextSize(2);
     arcada.setTextColor(ARCADA_WHITE);
-    arcada.print(found_command);
-    delay(250);
+    arcada.print(found_command);    
+    char imagename[40];
+    sprintf(imagename, "%s_image", found_command);
+    Serial.println(imagename);
+    const char *filename = TFconfigJSON[imagename];
+    Serial.print("File name: "); Serial.println(filename);
+    arcada.drawBMP((char *)filename, 20, 0);
+
+    delay(500);
     arcada.fillScreen(ARCADA_BLACK);
   }
 }

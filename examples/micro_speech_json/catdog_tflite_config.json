@@ -1,0 +1,5 @@
+{
+"model_name" : "Cat / Dog",
+"file_name" : "catdog.tflite",
+"category_labels" : ["silence", "unknown", "cat", "dog"]
+}
