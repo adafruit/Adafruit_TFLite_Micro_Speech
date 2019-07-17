@@ -29,10 +29,10 @@ install:
    - arduino --install-library "Adafruit ZeroTimer Library"
    - arduino --install-library "Adafruit TouchScreen"
    - arduino --install-library "Adafruit PixelDust"
-   - arduino --install-library "SdFat"
    - arduino --install-library "ArduinoJson"
    - arduino --install-library "Adafruit Arcada Library"
    - arduino --install-library "Adafruit Arcada GifDecoder"
+   - git clone --quiet https://github.com/adafruit/SdFat.git $HOME/Arduino/libraries/SdFat
 
 script:
    - build_arcada_platforms
