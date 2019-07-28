@@ -1,0 +1,5 @@
+{
+"model_name" : "Forward / Backward",
+"file_name" : "forwardback.tflite",
+"category_labels" : ["silence", "unknown", "forward", "backward"]
+}

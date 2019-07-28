@@ -1,0 +1,5 @@
+{ 
+"model_name" : "Forward / Backward / Stop", 
+"file_name" : "fwbkstop.tflite", 
+"category_labels" : ["silence", "unknown", "forward", "backward", "stop"] 
+}
