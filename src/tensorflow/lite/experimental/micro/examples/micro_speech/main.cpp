@@ -26,6 +26,12 @@ limitations under the License.
 #include "tensorflow/lite/version.h"
 #include <Arduino.h>
 
+// The size of this will depend on the model you're using, and may need to be
+// determined by experimentation. Put this item on the heap (having it on the
+// stack seems to make FreeRTOS sad)
+const int tensor_arena_size = 14 * 1024;
+uint8_t tensor_arena[tensor_arena_size];
+
 int tflite_micro_main(int argc, char* argv[]) {
   // Set up logging.
   tflite::MicroErrorReporter micro_error_reporter;
@@ -47,10 +53,6 @@ int tflite_micro_main(int argc, char* argv[]) {
   tflite::ops::micro::AllOpsResolver resolver;
 
   // Create an area of memory to use for input, output, and intermediate arrays.
-  // The size of this will depend on the model you're using, and may need to be
-  // determined by experimentation.
-  const int tensor_arena_size = 10 * 1024;
-  uint8_t tensor_arena[tensor_arena_size];
   tflite::SimpleTensorAllocator tensor_allocator(tensor_arena,
                                                  tensor_arena_size);
 
