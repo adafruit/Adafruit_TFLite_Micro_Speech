@@ -20,7 +20,6 @@ before_install:
 install:
    - arduino --install-library "Adafruit Unified Sensor"
    - arduino --install-library "Adafruit NeoPixel"
-   - arduino --install-library "Adafruit QSPI"
    - arduino --install-library "Adafruit GFX Library"
    - arduino --install-library "Adafruit ST7735 and ST7789 Library"
    - arduino --install-library "Adafruit ILI9341"
@@ -32,7 +31,7 @@ install:
    - arduino --install-library "ArduinoJson"
    - arduino --install-library "Adafruit Arcada Library"
    - arduino --install-library "Adafruit Arcada GifDecoder"
-   - git clone --quiet https://github.com/adafruit/SdFat.git $HOME/Arduino/libraries/SdFat
+   - arduino --install-library "SdFat - Adafruit Fork"
 
 script:
    - build_arcada_platforms
