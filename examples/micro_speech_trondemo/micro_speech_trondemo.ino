@@ -115,15 +115,19 @@ void TimerCallback() {
 extern int tflite_micro_main(int argc, char* argv[]);
 
 void setup() {
-  arcada.begin();
+  // Start TFT and fill black
+  if (!arcada.arcadaBegin()) {
+    Serial.print("Failed to begin");
+    while (1);
+  }
   arcada.filesysBeginMSD();
 
   Serial.begin(115200);
-  while(!Serial) delay(10);                // Wait for Serial monitor before continuing
+  //while(!Serial) delay(10);                // Wait for Serial monitor before continuing
 
   arcada.displayBegin();
   Serial.println("Arcada display begin");
-  arcada.fillScreen(ARCADA_BLACK);
+  arcada.display->fillScreen(ARCADA_BLACK);
   arcada.setBacklight(255);
 
   recording_buffer = (int16_t *)malloc(BUFFER_SIZE * sizeof(int16_t));
@@ -262,14 +266,14 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
                            current_time, millis());
     if (found_command[0] == 'y') {      // yes!
       playSoundAndGIF("/tron/yes.gif", yes_16k_mono_8bitAudioData, yes_16k_mono_8bitSamples);
-      arcada.fillScreen(ARCADA_BLACK);
+      arcada.display->fillScreen(ARCADA_BLACK);
       arcada.drawBMP("/tron/screen.bmp", 0, 0);
     } else if (found_command[0] == 'n') {
       playSoundAndGIF("/tron/no.gif", no_16k_mono_8bitAudioData, no_16k_mono_8bitSamples);
-      arcada.fillScreen(ARCADA_BLACK);
+      arcada.display->fillScreen(ARCADA_BLACK);
       arcada.drawBMP("/tron/screen.bmp", 0, 0);
     } else {
-      arcada.fillScreen(ARCADA_BLACK);
+      arcada.display->fillScreen(ARCADA_BLACK);
     }
   }
 }
