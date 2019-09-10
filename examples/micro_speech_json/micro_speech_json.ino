@@ -96,7 +96,10 @@ extern int tflite_micro_main(int argc, char* argv[]);
 void setup() {
   isRecording = false;
 
-  arcada.begin();
+  if (!arcada.arcadaBegin()) {
+    Serial.print("Failed to begin");
+    while (1);
+  }
   arcada.filesysBeginMSD();
 
   Serial.begin(115200);
@@ -104,7 +107,7 @@ void setup() {
 
   arcada.displayBegin();
   Serial.println("Arcada display begin");
-  arcada.fillScreen(ARCADA_BLACK);
+  arcada.display->fillScreen(ARCADA_BLACK);
   arcada.setBacklight(255);
 
   recording_buffer = (int16_t *)malloc(BUFFER_SIZE * sizeof(int16_t));
@@ -125,16 +128,16 @@ void setup() {
   const char *modelname = TFconfigJSON["model_name"];
   Serial.print("Model name: "); Serial.println(modelname);
 
-  arcada.fillScreen(ARCADA_BLACK);
-  arcada.setCursor(0, 0);
-  arcada.setTextSize(1);
-  arcada.setTextColor(ARCADA_WHITE);
-  arcada.print("TFLite Model: ");
-  arcada.println(modelname);
+  arcada.display->fillScreen(ARCADA_BLACK);
+  arcada.display->setCursor(0, 0);
+  arcada.display->setTextSize(1);
+  arcada.display->setTextColor(ARCADA_WHITE);
+  arcada.display->print("TFLite Model: ");
+  arcada.display->println(modelname);
   
   const char *tfilename = TFconfigJSON["file_name"];
   Serial.print("File name: "); Serial.println(tfilename);
-  arcada.print("File name: "); arcada.println(tfilename);
+  arcada.display->print("File name: "); arcada.display->println(tfilename);
 
   File tflite_file = arcada.open(tfilename);
   if (! tflite_file) {
@@ -178,7 +181,7 @@ void setup() {
 
   Serial.println("\nWaiting for button press A to record...");
   Serial.println("-----------ARCADA TFLITE----------");
-  arcada.print("\nPress A to record & infer!");
+  arcada.display->print("\nPress A to record & infer!");
   
   delay(100);
   
@@ -220,11 +223,11 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
   if (is_new_command) {
     error_reporter->Report("I heard %s (score %d) @%dms (realtime %d)", found_command, score,
                            current_time, millis());
-    arcada.fillScreen(ARCADA_BLACK);
-    arcada.setCursor(arcada.width()/4, arcada.height()/2);
-    arcada.setTextSize(2);
-    arcada.setTextColor(ARCADA_WHITE);
-    arcada.print(found_command);    
+    arcada.display->fillScreen(ARCADA_BLACK);
+    arcada.display->setCursor(arcada.display->width()/4, arcada.display->height()/2);
+    arcada.display->setTextSize(2);
+    arcada.display->setTextColor(ARCADA_WHITE);
+    arcada.display->print(found_command);    
     char imagename[40];
     sprintf(imagename, "%s_image", found_command);
     Serial.println(imagename);
@@ -233,6 +236,6 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
     arcada.drawBMP((char *)filename, 20, 0);
 
     delay(500);
-    arcada.fillScreen(ARCADA_BLACK);
+    arcada.display->fillScreen(ARCADA_BLACK);
   }
 }
