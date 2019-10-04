@@ -43,6 +43,8 @@ int g_tiny_conv_micro_features_model_data_len;
 
 Adafruit_Arcada arcada;
 
+extern volatile bool pauseTensorflow;
+
 volatile bool val;
 volatile bool isRecording;
 volatile uint8_t button_counter = 0;
@@ -77,6 +79,8 @@ void TimerCallback() {
       // erase the buffer
       memset(recording_buffer, 0, BUFFER_SIZE * sizeof(int16_t));
       Serial.printf("Recording @ %d...", millis());
+      pauseTensorflow = true;
+      return;
     }
     if (isRecording && !(pressed_buttons & ARCADA_BUTTONMASK_A)) {
       isRecording = false;  // definitely done!
@@ -87,6 +91,19 @@ void TimerCallback() {
       Serial.printf("Done! Recorded %d samples\n", recording_length);  
       // we have to track when this happened
       audio_timestamp_ms = millis();
+
+      pauseTensorflow = false;
+      return;
+    }
+
+    if (arcada.recentUSB()) {
+      arcada.pixels.setPixelColor(0, arcada.pixels.Color(20, 20, 0));
+      arcada.pixels.show();
+      pauseTensorflow = true;
+    } else if (!isRecording && pauseTensorflow) {
+      arcada.pixels.setPixelColor(0, arcada.pixels.Color(0, 0, 0));
+      arcada.pixels.show();
+      pauseTensorflow = false;
     }
   }
 }
@@ -184,6 +201,8 @@ void setup() {
   arcada.display->print("\nPress A to record & infer!");
   
   delay(100);
+
+  pauseTensorflow = false;
   
   tflite_micro_main(0, NULL);
 }

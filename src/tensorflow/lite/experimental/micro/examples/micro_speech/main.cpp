@@ -26,6 +26,8 @@ limitations under the License.
 #include "tensorflow/lite/version.h"
 #include <Arduino.h>
 
+volatile bool pauseTensorflow = false;
+
 // The size of this will depend on the model you're using, and may need to be
 // determined by experimentation. Put this item on the heap (having it on the
 // stack seems to make FreeRTOS sad)
@@ -81,6 +83,10 @@ int tflite_micro_main(int argc, char* argv[]) {
   // Keep reading and analysing audio data in an infinite loop.
   while (true) {
     yield(); // let USB or RTOS do things
+    if (pauseTensorflow) {
+      delay(10);
+      continue;
+    }
 
     // Fetch the spectrogram for the current time.
     const int32_t current_time = LatestAudioTimestamp();
