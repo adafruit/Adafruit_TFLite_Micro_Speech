@@ -34,7 +34,7 @@ install:
    - arduino --install-library "SdFat - Adafruit Fork"
 
 script:
-   - build_platform pybadge_m4
+   - build_platform pybadge
    - build_platform nrf52840
 
 
