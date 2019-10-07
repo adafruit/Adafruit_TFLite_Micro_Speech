@@ -26,6 +26,8 @@ limitations under the License.
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/command_responder.h"
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/micro_features/micro_model_settings.h"
 #include <Adafruit_Arcada.h>
+#include <Adafruit_SleepyDog.h>
+
 #include "introwav.h"
 #include "yes-16k-mono-8bit.h"
 #include "no-16k-mono-8bit.h"
@@ -38,6 +40,7 @@ StaticJsonDocument<256> TFconfigJSON;  ///< The object to store our various sett
 #define AUDIO_OUT     A0
 
 Adafruit_Arcada arcada;
+extern volatile bool pauseTensorflow;
 // GIF stuff!
 void initGIFDecode();
 bool playGIF(const char *filename, uint8_t times=1);
@@ -57,8 +60,16 @@ int g_tiny_conv_micro_features_model_data_len;
 
 volatile bool val;
 volatile bool isRecording, isPlaying;
-volatile uint8_t button_counter = 0;
+volatile uint8_t button_counter = 0;  // 10ms button counter
+volatile uint16_t watchdog_counter = 0;  // 100ms watchdog counter
 void TimerCallback() {
+  watchdog_counter++;
+  if (watchdog_counter == 1600) {  // every 100ms
+    Watchdog.reset();
+    Serial.printf("Kicked WDT @ %d\n", millis());
+    watchdog_counter = 0;
+  }
+  
   if (isRecording) {
     digitalWrite(LED_OUT, val);  // tick tock test
     val = !val;
@@ -68,6 +79,7 @@ void TimerCallback() {
     recording_buffer[audio_idx] = sample;
     audio_idx++;
     if (audio_idx == BUFFER_SIZE) {
+      pauseTensorflow = false;
       isRecording = false;
     }
   }
@@ -84,9 +96,19 @@ void TimerCallback() {
   button_counter++;
   if (button_counter == 160) { // this is called once every 10 millisecond!
     button_counter = 0;
-    
     uint8_t pressed_buttons = arcada.readButtons();
-    
+    uint8_t justpressed_buttons = arcada.justPressedButtons();
+    if (!pauseTensorflow && (justpressed_buttons & ARCADA_BUTTONMASK_START)) {
+      Serial.println("Pause");
+      arcada.pixels.fill(arcada.pixels.Color(20, 20, 0));
+      arcada.pixels.show();
+      pauseTensorflow = true;
+    } else if (pauseTensorflow && (justpressed_buttons & ARCADA_BUTTONMASK_START)) {
+      Serial.println("Unpause");
+      pauseTensorflow = false;
+      arcada.pixels.fill(arcada.pixels.Color(0, 0, 0));
+      arcada.pixels.show();
+    }
     if (!isRecording && (pressed_buttons & ARCADA_BUTTONMASK_A)) {
       // button was pressed!
       isRecording = true;
@@ -98,6 +120,8 @@ void TimerCallback() {
       // erase the buffer
       memset(recording_buffer, 0, BUFFER_SIZE * sizeof(int16_t));
       Serial.printf("Recording @ %d...", millis());
+      pauseTensorflow = true;
+      return;
     }
     if (isRecording && !(pressed_buttons & ARCADA_BUTTONMASK_A)) {
       isRecording = false;  // definitely done!
@@ -108,6 +132,8 @@ void TimerCallback() {
       Serial.printf("Done! Recorded %d samples\n", recording_length);  
       // we have to track when this happened
       audio_timestamp_ms = millis();
+      pauseTensorflow = false;
+      return;
     }
   }
 }
@@ -203,15 +229,24 @@ void setup() {
   isPlaying = isRecording = false;
   arcada.timerCallback(kAudioSampleFrequency, TimerCallback);
 
-  // Play introgif
-  playSoundAndGIF("/tron/intro.gif", introAudioData, introSamples);
-
+  uint8_t resetcause = Watchdog.resetCause();
+  Serial.print("Reset due to 0x%02x\n", resetcause);
+  if (resetcause & 0x11) { // power on reset or external reset
+    // Play introgif
+    playSoundAndGIF("/tron/intro.gif", introAudioData, introSamples);
+  }
   // display instruction screen
   arcada.drawBMP("/tron/screen.bmp", 0, 0);
 
+  // wait until device mounted
+  while( !USBDevice.mounted() ) delay(1);
+
+  int countdownMS = Watchdog.enable(4000);
+  Serial.printf("Enabled the watchdog with max countdown of %d ms\n", countdownMS);
+
   Serial.println("Waiting for button press A to record...");
   Serial.println("-----------ARCADA TFLITE----------");
-
+  pauseTensorflow = false;
   tflite_micro_main(0, NULL);
 }
 
