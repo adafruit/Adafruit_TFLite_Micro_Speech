@@ -230,7 +230,7 @@ void setup() {
   arcada.timerCallback(kAudioSampleFrequency, TimerCallback);
 
   uint8_t resetcause = Watchdog.resetCause();
-  Serial.print("Reset due to 0x%02x\n", resetcause);
+  Serial.printf("Reset due to 0x%02x\n", resetcause);
   if (resetcause & 0x11) { // power on reset or external reset
     // Play introgif
     playSoundAndGIF("/tron/intro.gif", introAudioData, introSamples);
@@ -241,7 +241,7 @@ void setup() {
   // wait until device mounted
   while( !USBDevice.mounted() ) delay(1);
 
-  int countdownMS = Watchdog.enable(4000);
+  int countdownMS = Watchdog.enable(150);
   Serial.printf("Enabled the watchdog with max countdown of %d ms\n", countdownMS);
 
   Serial.println("Waiting for button press A to record...");
