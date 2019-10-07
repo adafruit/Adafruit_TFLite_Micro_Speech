@@ -109,6 +109,7 @@ void TimerCallback() {
       arcada.pixels.fill(arcada.pixels.Color(0, 0, 0));
       arcada.pixels.show();
     }
+    
     if (!isRecording && (pressed_buttons & ARCADA_BUTTONMASK_A)) {
       // button was pressed!
       isRecording = true;
@@ -153,7 +154,6 @@ void setup() {
 
   arcada.displayBegin();
   Serial.println("Arcada display begin");
-  arcada.display->fillScreen(ARCADA_BLACK);
   arcada.setBacklight(255);
 
   recording_buffer = (int16_t *)malloc(BUFFER_SIZE * sizeof(int16_t));
@@ -231,15 +231,13 @@ void setup() {
 
   uint8_t resetcause = Watchdog.resetCause();
   Serial.printf("Reset due to 0x%02x\n", resetcause);
+
   if (resetcause & 0x11) { // power on reset or external reset
     // Play introgif
     playSoundAndGIF("/tron/intro.gif", introAudioData, introSamples);
   }
   // display instruction screen
   arcada.drawBMP("/tron/screen.bmp", 0, 0);
-
-  // wait until device mounted
-  while( !USBDevice.mounted() ) delay(1);
 
   int countdownMS = Watchdog.enable(150);
   Serial.printf("Enabled the watchdog with max countdown of %d ms\n", countdownMS);

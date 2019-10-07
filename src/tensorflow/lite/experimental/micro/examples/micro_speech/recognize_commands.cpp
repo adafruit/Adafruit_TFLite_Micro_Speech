@@ -35,6 +35,7 @@ RecognizeCommands::RecognizeCommands(tflite::ErrorReporter* error_reporter,
 TfLiteStatus RecognizeCommands::ProcessLatestResults(
     const TfLiteTensor* latest_results, const int32_t current_time_ms,
     const char** found_command, uint8_t* score, bool* is_new_command) {
+  //error_reporter_->Report("ping");
   if ((latest_results->dims->size != 2) ||
       (latest_results->dims->data[0] != 1) ||
       (latest_results->dims->data[1] != kCategoryCount)) {
@@ -63,6 +64,7 @@ TfLiteStatus RecognizeCommands::ProcessLatestResults(
   }
 
   // Add the latest results to the head of the queue.
+  //error_reporter_->Report("push_back(%d %d) size %d\n", current_time_ms, latest_results->data.uint8, previous_results_.size());
   previous_results_.push_back({current_time_ms, latest_results->data.uint8});
 
   // Prune any earlier results that are too old for the averaging window.
