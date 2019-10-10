@@ -31,7 +31,7 @@ extern volatile uint32_t audio_timestamp_ms;
 TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
                              int start_ms, int duration_ms,
                              int* audio_samples_size, int16_t** audio_samples) { 
-  const int start_sample = (start_ms * kAudioSampleFrequency) / 1000;
+  const int start_sample = start_ms * (kAudioSampleFrequency / 1000);
 #ifdef DEBUG_SAMPLES
   digitalWrite(13, HIGH);
   Serial.printf("Getting %d samples: ", kMaxAudioSampleSize);
