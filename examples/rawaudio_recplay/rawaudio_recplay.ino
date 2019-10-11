@@ -1,22 +1,28 @@
+#define USE_EXTERNAL_MIC A8  // D2 on pygbadge
+//#define USE_EDGEBADGE_PDMMIC
+
 #include <SPI.h>
 #include "Adafruit_ZeroTimer.h"
 #include "Adafruit_NeoPixel.h"
 
-#define LED_OUT      13
-#define BUTTON        5
+#define LED_OUT       LED_BUILTIN
+#define BUTTON        12
 #define NEOPIXEL_PIN  8
+
 #define AUDIO_OUT     A0
-#define AUDIO_IN      A5
+#if defined(USE_EXTERNAL_MIC)
+  #define AUDIO_IN      USE_EXTERNAL_MIC
+  #define DAC_TIMER        5
+  void TC5_Handler(){
+    Adafruit_ZeroTimer::timerHandler(DAC_TIMER);
+  }
+  Adafruit_ZeroTimer zt = Adafruit_ZeroTimer(DAC_TIMER);
+#endif
 
-#define DAC_TIMER        5
-void TC5_Handler(){
-  Adafruit_ZeroTimer::timerHandler(DAC_TIMER);
-}
 
-Adafruit_ZeroTimer zt = Adafruit_ZeroTimer(DAC_TIMER);
 #define SAMPLERATE_HZ 16000
+#define BUFFER_SIZE   SAMPLERATE_HZ
 
-#define BUFFER_SIZE 16000
 volatile uint16_t audio_idx = 0;
 uint16_t audio_max = 0;
 int16_t audio_buffer[BUFFER_SIZE];
@@ -64,15 +70,20 @@ void setup() {
   delay(10);
   pixel.show();
 
+#if defined(ADAFRUIT_PYBADGE_M4_EXPRESS)
+  // enable speaker
+  pinMode(51, OUTPUT);
+  digitalWrite(51, HIGH);
+#endif
   isPlaying = isRecording = false;
   
   Serial.begin(115200);
-  while(!Serial);                 // Wait for Serial monitor before continuing
+  while(!Serial) delay(10);       // Wait for Serial monitor before continuing
 
   initTimer();
   analogWriteResolution(12);
   analogReadResolution(12);
-  analogWrite(A0, 512);
+  analogWrite(AUDIO_OUT, 512);
   
   Serial.println("Record & Play audio test");
   pinMode(BUTTON, INPUT_PULLUP);
