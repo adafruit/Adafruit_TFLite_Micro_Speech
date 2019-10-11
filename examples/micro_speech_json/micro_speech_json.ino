@@ -27,7 +27,7 @@ limitations under the License.
 bool loadTFConfigFile(const char *filename="/tflite_config.json");
 StaticJsonDocument<512> TFconfigJSON;  ///< The object to store our various settings
 
-#define LED_OUT       13
+#define LED_OUT       LED_BUILTIN
 #define AUDIO_IN      A8  // aka D2
 
 #define BUFFER_SIZE (kAudioSampleFrequency*3) // up to 3 seconds of audio
@@ -36,6 +36,7 @@ volatile uint32_t recording_length = 0;
 int16_t *recording_buffer;
 volatile uint32_t audio_timestamp_ms;
 
+const char *modelname, *tfilename;
 uint8_t kCategoryCount = 0;
 char **kCategoryLabels;
 unsigned char *g_tiny_conv_micro_features_model_data;
@@ -139,22 +140,16 @@ void setup() {
   analogWriteResolution(12);
   analogReadResolution(12);
 
+  arcada.filesysBegin();
+  arcada.filesysListFiles();
   if (!loadTFConfigFile()) {
     arcada.haltBox("Failed to load TFLite config");
   }
-  const char *modelname = TFconfigJSON["model_name"];
+  modelname = TFconfigJSON["model_name"];
   Serial.print("Model name: "); Serial.println(modelname);
-
-  arcada.display->fillScreen(ARCADA_BLACK);
-  arcada.display->setCursor(0, 0);
-  arcada.display->setTextSize(1);
-  arcada.display->setTextColor(ARCADA_WHITE);
-  arcada.display->print("TFLite Model: ");
-  arcada.display->println(modelname);
   
-  const char *tfilename = TFconfigJSON["file_name"];
+  tfilename = TFconfigJSON["file_name"];
   Serial.print("File name: "); Serial.println(tfilename);
-  arcada.display->print("File name: "); arcada.display->println(tfilename);
 
   File tflite_file = arcada.open(tfilename);
   if (! tflite_file) {
@@ -174,7 +169,8 @@ void setup() {
     arcada.haltBox("Could not load model");
   }
   Serial.println("\nSuccess!");
-
+  displayModelInfo();
+  
   JsonArray labelArray = TFconfigJSON["category_labels"].as<JsonArray>();
   Serial.print("Category label count: "); Serial.println(labelArray.size());
   kCategoryCount = labelArray.size();
@@ -199,11 +195,8 @@ void setup() {
   Serial.println("\nWaiting for button press A to record...");
   Serial.println("-----------ARCADA TFLITE----------");
   arcada.display->print("\nPress A to record & infer!");
-  
   delay(100);
-
   pauseTensorflow = false;
-  
   tflite_micro_main(0, NULL);
 }
 
@@ -234,7 +227,16 @@ bool loadTFConfigFile(const char *filename) {
   return true;
 }
 
-
+void displayModelInfo(void) {
+  arcada.display->fillScreen(ARCADA_BLACK);
+  arcada.display->setCursor(0, 0);
+  arcada.display->setTextSize(1);
+  arcada.display->setTextColor(ARCADA_WHITE);
+  arcada.display->print("TFLite Model: ");
+  arcada.display->println(modelname);
+  arcada.display->print("File name: "); 
+  arcada.display->println(tfilename);
+}
 
 void RespondToCommand(tflite::ErrorReporter* error_reporter,
                       int32_t current_time, const char* found_command,
@@ -255,6 +257,6 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
     arcada.drawBMP((char *)filename, 20, 0);
 
     delay(500);
-    arcada.display->fillScreen(ARCADA_BLACK);
+    displayModelInfo();
   }
 }
