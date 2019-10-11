@@ -2,8 +2,8 @@
 // When pressed, the button will record audio (neopixel turns red). Once released
 // the tensorflow lite runtime will pick up the audio samples and perform the analysis
 
-#define USE_EXTERNAL_MIC A8  // D2 on pybadge
-//#define USE_EDGEBADGE_PDMMIC
+//#define USE_EXTERNAL_MIC A8  // D2 on pybadge
+#define USE_EDGEBADGE_PDMMIC
 
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
@@ -163,13 +163,13 @@ void setup() {
 
 #if defined(USE_EXTERNAL_MIC)
   arcada.timerCallback(kAudioSampleFrequency, TIMER_CALLBACK);
+  analogReadResolution(12);
 #endif
 #if defined(USE_EDGEBADGE_PDMMIC)
-  pdmspi.begin(SAMPLERATE_HZ);
+  pdmspi.begin(kAudioSampleFrequency);
   Serial.print("Final PDM frequency: "); Serial.println(pdmspi.sampleRate);
 #endif
   analogWriteResolution(12);
-  analogReadResolution(12);
 
   arcada.filesysBegin();
   arcada.filesysListFiles();
