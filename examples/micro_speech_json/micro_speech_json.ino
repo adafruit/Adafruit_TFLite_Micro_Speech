@@ -2,6 +2,8 @@
 // When pressed, the button will record audio (neopixel turns red). Once released
 // the tensorflow lite runtime will pick up the audio samples and perform the analysis
 
+#define USE_EXTERNAL_MIC A8  // D2 on pybadge
+//#define USE_EDGEBADGE_PDMMIC
 
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
@@ -28,7 +30,15 @@ bool loadTFConfigFile(const char *filename="/tflite_config.json");
 StaticJsonDocument<512> TFconfigJSON;  ///< The object to store our various settings
 
 #define LED_OUT       LED_BUILTIN
-#define AUDIO_IN      A8  // aka D2
+#if defined(USE_EXTERNAL_MIC)
+  #define AUDIO_IN         USE_EXTERNAL_MIC
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+  #include <Adafruit_ZeroPDMSPI.h>
+  #define PDM_SPI            SPI2    // PDM mic SPI peripheral
+  #define TIMER_CALLBACK     SERCOM3_0_Handler
+  Adafruit_ZeroPDMSPI pdmspi(&PDM_SPI);
+#endif
 
 #define BUFFER_SIZE (kAudioSampleFrequency*3) // up to 3 seconds of audio
 volatile uint32_t audio_idx = 0;
@@ -49,13 +59,29 @@ extern volatile bool pauseTensorflow;
 volatile bool val;
 volatile bool isRecording;
 volatile uint8_t button_counter = 0;
-void TimerCallback() {
+void TIMER_CALLBACK() {
+  int32_t sample;
+
+#if defined(USE_EDGEBADGE_PDMMIC)
+  uint16_t read_pdm;
+  if (!pdmspi.decimateFilterWord(&read_pdm)) {
+    return; // not ready for data yet!
+  }
+  sample = read_pdm;
+#endif
+
   if (isRecording) {
     digitalWrite(LED_OUT, val);  // tick tock test
     val = !val;
-    int16_t sample = analogRead(AUDIO_IN);
+#if defined(USE_EXTERNAL_MIC)
+    sample = analogRead(AUDIO_IN);
     sample -= 2047; // 12 bit audio unsigned  0-4095 to signed -2048-~2047
     sample *= 16;   // convert 12 bit to 16 bit
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+    sample -= 32676;
+    sample *= 2;
+#endif
     recording_buffer[audio_idx] = sample;
     audio_idx++;
     if (audio_idx == BUFFER_SIZE) {
@@ -135,8 +161,13 @@ void setup() {
   memset(recording_buffer, 0, BUFFER_SIZE * sizeof(int16_t));
   recording_length = 0;
 
-  arcada.timerCallback(kAudioSampleFrequency, TimerCallback);
-  
+#if defined(USE_EXTERNAL_MIC)
+  arcada.timerCallback(kAudioSampleFrequency, TIMER_CALLBACK);
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+  pdmspi.begin(SAMPLERATE_HZ);
+  Serial.print("Final PDM frequency: "); Serial.println(pdmspi.sampleRate);
+#endif
   analogWriteResolution(12);
   analogReadResolution(12);
 
