@@ -6,6 +6,9 @@
 // If compiled with TinyUSB the disk drive will  be exposed, but its incredibly slow
 // because TFLite hogs the CPU, so its not recommended for file transfer
 
+#define USE_EXTERNAL_MIC A8  // D2 on pybadge
+//#define USE_EDGEBADGE_PDMMIC
+
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,9 +38,18 @@ limitations under the License.
 bool loadTFConfigFile(const char *filename="/tron/tflite_config.json");
 StaticJsonDocument<256> TFconfigJSON;  ///< The object to store our various settings
 
-#define LED_OUT       13
-#define AUDIO_IN      A8  // Stemma D2
-#define AUDIO_OUT     A0
+#define LED_OUT              LED_BUILTIN
+#define AUDIO_OUT            A0
+#if defined(USE_EXTERNAL_MIC)
+  #define AUDIO_IN           USE_EXTERNAL_MIC
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+  #include <Adafruit_ZeroPDMSPI.h>
+  #define PDM_SPI            SPI2    // PDM mic SPI peripheral
+  #define TIMER_CALLBACK     SERCOM3_0_Handler
+  Adafruit_ZeroPDMSPI pdmspi(&PDM_SPI);
+#endif
+
 
 Adafruit_Arcada arcada;
 extern volatile bool pauseTensorflow;
@@ -62,7 +74,17 @@ volatile bool val;
 volatile bool isRecording, isPlaying;
 volatile uint8_t button_counter = 0;  // 10ms button counter
 volatile uint16_t watchdog_counter = 0;  // 100ms watchdog counter
-void TimerCallback() {
+void TIMER_CALLBACK() {
+  int32_t sample;
+
+#if defined(USE_EDGEBADGE_PDMMIC)
+  uint16_t read_pdm;
+  if (!pdmspi.decimateFilterWord(&read_pdm)) {
+    return; // not ready for data yet!
+  }
+  sample = read_pdm;
+#endif
+
   watchdog_counter++;
   if (watchdog_counter == 1600) {  // every 100ms
     Watchdog.reset();
@@ -73,9 +95,15 @@ void TimerCallback() {
   if (isRecording) {
     digitalWrite(LED_OUT, val);  // tick tock test
     val = !val;
-    int16_t sample = analogRead(AUDIO_IN);
+#if defined(USE_EXTERNAL_MIC)
+    sample = analogRead(AUDIO_IN);
     sample -= 2047; // 12 bit audio unsigned  0-4095 to signed -2048-~2047
     sample *= 16;   // convert 12 bit to 16 bit
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+    sample -= 32676;
+    sample *= 2;
+#endif
     recording_buffer[audio_idx] = sample;
     audio_idx++;
     if (audio_idx == BUFFER_SIZE) {
@@ -158,22 +186,28 @@ void setup() {
 
   recording_buffer = (int16_t *)malloc(BUFFER_SIZE * sizeof(int16_t));
   if (!recording_buffer) {
-    Serial.println("Unable to allocate recording buffer");
-    while (1);
+    arcada.haltBox("Unable to allocate recording buffer");
   }
   memset(recording_buffer, 0, BUFFER_SIZE * sizeof(int16_t));
   recording_length = 0;
 
-  analogWriteResolution(8);
+#if defined(USE_EXTERNAL_MIC)
+  arcada.timerCallback(kAudioSampleFrequency, TIMER_CALLBACK);
   analogReadResolution(12);
+#endif
+#if defined(USE_EDGEBADGE_PDMMIC)
+  pdmspi.begin(kAudioSampleFrequency);
+  Serial.print("Final PDM frequency: "); Serial.println(pdmspi.sampleRate);
+#endif
+  analogWriteResolution(8);
 
   if (arcada.filesysBegin()) {
     Serial.println("Found filesystem!");
   } else {
     arcada.haltBox("No filesystem found! For QSPI flash, load CircuitPython. For SD cards, format with FAT");
   }
-
-
+  
+  arcada.filesysListFiles();
   if (!loadTFConfigFile()) {
     arcada.haltBox("Failed to load TFLite config");
   }
@@ -225,9 +259,7 @@ void setup() {
 
   // get the gif decoder lined up
   initGIFDecode();
-  // start our 16khz timer
   isPlaying = isRecording = false;
-  arcada.timerCallback(kAudioSampleFrequency, TimerCallback);
 
   uint8_t resetcause = Watchdog.resetCause();
   Serial.printf("Reset due to 0x%02x\n", resetcause);
@@ -299,14 +331,10 @@ void RespondToCommand(tflite::ErrorReporter* error_reporter,
                            current_time, millis());
     if (found_command[0] == 'y') {      // yes!
       playSoundAndGIF("/tron/yes.gif", yes_16k_mono_8bitAudioData, yes_16k_mono_8bitSamples);
-      arcada.display->fillScreen(ARCADA_BLACK);
-      arcada.drawBMP("/tron/screen.bmp", 0, 0);
     } else if (found_command[0] == 'n') {
       playSoundAndGIF("/tron/no.gif", no_16k_mono_8bitAudioData, no_16k_mono_8bitSamples);
-      arcada.display->fillScreen(ARCADA_BLACK);
-      arcada.drawBMP("/tron/screen.bmp", 0, 0);
-    } else {
-      arcada.display->fillScreen(ARCADA_BLACK);
     }
+    arcada.display->fillScreen(ARCADA_BLACK);
+    arcada.drawBMP("/tron/screen.bmp", 0, 0);
   }
 }
