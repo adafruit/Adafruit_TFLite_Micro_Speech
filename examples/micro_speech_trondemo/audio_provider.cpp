@@ -33,11 +33,11 @@ TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
                              int* audio_samples_size, int16_t** audio_samples) { 
   const int start_sample = start_ms * (kAudioSampleFrequency / 1000);
 #ifdef DEBUG_SAMPLES
-  digitalWrite(13, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.printf("Getting %d samples: ", kMaxAudioSampleSize);
 #endif
 
-  uint32_t curr_audio_start_sample = (audio_timestamp_ms * kAudioSampleFrequency) / 1000;
+  uint32_t curr_audio_start_sample = audio_timestamp_ms * (kAudioSampleFrequency / 1000);
   uint32_t curr_audio_end_sample = curr_audio_start_sample+recording_length;
 
   //Serial.printf("Samples start @ %d, last audio @ %d\n", start_sample, curr_audio_start_sample);
@@ -65,7 +65,7 @@ TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
 
 #ifdef DEBUG_SAMPLES
   Serial.println();
-  digitalWrite(13, LOW);
+  digitalWrite(LED_BUILTIN, LOW);
 #endif
   return kTfLiteOk;
 }

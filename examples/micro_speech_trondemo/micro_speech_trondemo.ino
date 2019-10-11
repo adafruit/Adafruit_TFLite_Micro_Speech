@@ -259,7 +259,9 @@ void setup() {
 
   // get the gif decoder lined up
   initGIFDecode();
+  // start our 16khz timer
   isPlaying = isRecording = false;
+  arcada.timerCallback(kAudioSampleFrequency, TIMER_CALLBACK);
 
   uint8_t resetcause = Watchdog.resetCause();
   Serial.printf("Reset due to 0x%02x\n", resetcause);
