@@ -6,8 +6,8 @@
 // If compiled with TinyUSB the disk drive will  be exposed, but its incredibly slow
 // because TFLite hogs the CPU, so its not recommended for file transfer
 
-#define USE_EXTERNAL_MIC A8  // D2 on pybadge
-//#define USE_EDGEBADGE_PDMMIC
+//#define USE_EXTERNAL_MIC A8  // D2 on pybadge
+#define USE_EDGEBADGE_PDMMIC
 
 /* Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 
@@ -259,9 +259,7 @@ void setup() {
 
   // get the gif decoder lined up
   initGIFDecode();
-  // start our 16khz timer
   isPlaying = isRecording = false;
-  arcada.timerCallback(kAudioSampleFrequency, TIMER_CALLBACK);
 
   uint8_t resetcause = Watchdog.resetCause();
   Serial.printf("Reset due to 0x%02x\n", resetcause);
