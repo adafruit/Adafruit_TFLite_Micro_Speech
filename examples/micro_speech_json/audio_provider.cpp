@@ -37,7 +37,7 @@ TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
   Serial.printf("Getting %d samples: ", kMaxAudioSampleSize);
 #endif
 
-  uint32_t curr_audio_start_sample = (audio_timestamp_ms * kAudioSampleFrequency) / 1000;
+  uint32_t curr_audio_start_sample = audio_timestamp_ms * (kAudioSampleFrequency / 1000);
   uint32_t curr_audio_end_sample = curr_audio_start_sample+recording_length;
 
   //Serial.printf("Samples start @ %d, last audio @ %d\n", start_sample, curr_audio_start_sample);
