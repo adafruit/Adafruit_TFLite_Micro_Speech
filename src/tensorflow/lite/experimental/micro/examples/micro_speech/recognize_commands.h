@@ -22,9 +22,6 @@ limitations under the License.
 #include "tensorflow/lite/experimental/micro/examples/micro_speech/micro_features/micro_model_settings.h"
 #include "tensorflow/lite/experimental/micro/micro_error_reporter.h"
 
-#include "stdlib.h"
-extern uint8_t kCategoryCount;
-
 // Partial implementation of std::dequeue, just providing the functionality
 // that's needed to keep a record of previous neural network results over a
 // short time period, so they can be averaged together to produce a more
@@ -41,14 +38,12 @@ class PreviousResultsQueue {
   struct Result {
     Result() : time_(0), scores_() {}
     Result(int32_t time, uint8_t* scores) : time_(time) {
-      scores_ = (uint8_t *)malloc(kCategoryCount * sizeof(uint8_t));
-
       for (int i = 0; i < kCategoryCount; ++i) {
         scores_[i] = scores[i];
       }
     }
     int32_t time_;
-    uint8_t *scores_;
+    uint8_t scores_[kCategoryCountMax];
   };
 
   int size() { return size_; }

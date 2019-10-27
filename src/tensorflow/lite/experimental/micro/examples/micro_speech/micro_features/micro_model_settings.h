@@ -33,8 +33,10 @@ constexpr int kFeatureElementCount = (kFeatureSliceSize * kFeatureSliceCount);
 constexpr int kFeatureSliceStrideMs = 20;
 constexpr int kFeatureSliceDurationMs = 30;
 
+constexpr int kCategoryCountMax = 5;
 constexpr int kSilenceIndex = 0;
 constexpr int kUnknownIndex = 1;
 extern char** kCategoryLabels;
+extern uint8_t kCategoryCount;
 
 #endif  // TENSORFLOW_LITE_EXPERIMENTAL_MICRO_EXAMPLES_MICRO_SPEECH_MICRO_FEATURES_MICRO_MODEL_SETTINGS_H_
