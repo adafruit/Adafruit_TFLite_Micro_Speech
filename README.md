@@ -1,4 +1,12 @@
-# Adafruit TensorFlow Lite Micro Speech Library [![Build Status](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech.svg?branch=master)](https://travis-ci.com/adafruit/Adafruit_TFLite_Micro_Speech)
+# Deprecated Library
+
+We've deprecated this library and are now supporting the official TensorFlow library for better support.
+Check out this guide for new examples!
+
+https://learn.adafruit.com/tensorflow-lite-for-edgebadge-kit-quickstart/
+
+
+## Adafruit TensorFlow Lite Micro Speech Library
 
 This is a 'Arduino-ified' version of the TensorFlow Lite (experimental) micro speech example. Some changes were made to the generated Arduino project file, and then we built some examples on top of it. We require pressing a button to record audio that is then analyzed - there is no example for continuous record/analyze (yet)
 
